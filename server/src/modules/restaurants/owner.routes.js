@@ -1,0 +1,25 @@
+import { Router } from "express";
+import { authenticate, authorize } from "../../middleware/authenticate.js";
+import { validate } from "../../middleware/validate.js";
+import { createCategorySchema, categoryParamsSchema, createItemSchema, itemParamsSchema, updateItemSchema } from "../menu/menu.schemas.js";
+import { createRestaurantSchema, updateRestaurantSchema } from "./restaurant.schemas.js";
+import { createCategory, createItem, createRestaurant, deleteCategory, deleteItem, getMenu, getOwnerRestaurant, updateItem, updateRestaurant } from "./owner.controller.js";
+import { imageUpload } from "../../middleware/upload.js";
+import { uploadMenuImage } from "../uploads/upload.controller.js";
+import { listRestaurantOrders, updateRestaurantOrder } from "../orders/ownerOrder.controller.js";
+import { ownerOrderStatusSchema } from "../orders/ownerOrder.schemas.js";
+
+export const ownerRouter = Router();
+ownerRouter.use(authenticate);
+ownerRouter.post("/restaurant", authorize("customer", "restaurantOwner"), validate(createRestaurantSchema), createRestaurant);
+ownerRouter.post("/uploads/images", authorize("customer", "restaurantOwner", "admin"), imageUpload.single("image"), uploadMenuImage);
+ownerRouter.get("/restaurant", authorize("restaurantOwner", "admin"), getOwnerRestaurant);
+ownerRouter.patch("/restaurant", authorize("restaurantOwner", "admin"), validate(updateRestaurantSchema), updateRestaurant);
+ownerRouter.get("/menu", authorize("restaurantOwner", "admin"), getMenu);
+ownerRouter.post("/menu/categories", authorize("restaurantOwner", "admin"), validate(createCategorySchema), createCategory);
+ownerRouter.delete("/menu/categories/:categoryId", authorize("restaurantOwner", "admin"), validate(categoryParamsSchema), deleteCategory);
+ownerRouter.post("/menu/items", authorize("restaurantOwner", "admin"), validate(createItemSchema), createItem);
+ownerRouter.patch("/menu/items/:itemId", authorize("restaurantOwner", "admin"), validate(updateItemSchema), updateItem);
+ownerRouter.delete("/menu/items/:itemId", authorize("restaurantOwner", "admin"), validate(itemParamsSchema), deleteItem);
+ownerRouter.get("/orders", authorize("restaurantOwner"), listRestaurantOrders);
+ownerRouter.patch("/orders/:orderId/status", authorize("restaurantOwner"), validate(ownerOrderStatusSchema), updateRestaurantOrder);

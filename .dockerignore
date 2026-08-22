@@ -1,0 +1,10 @@
+.git
+.gitignore
+**/node_modules
+client/dist
+work
+outputs
+*.log
+server/.env
+server/.env.*
+!server/.env.example
