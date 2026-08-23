@@ -4,7 +4,9 @@ import { Navigate } from "react-router-dom";
 import {
   useGetAdminAuditQuery, useGetAdminOrdersQuery, useGetAdminReviewsQuery, useGetAdminUsersQuery,
   useGetApplicationsQuery, useModerateReviewMutation, useOperateRestaurantMutation,
-  useReviewRestaurantMutation, useUpdateAdminUserMutation,
+  useReviewRestaurantMutation, useUpdateAdminUserMutation, useGetAdminRidersQuery,
+  useReviewRiderMutation, useReviewRestaurantLeadMutation,
+  useMarkRiderEarningPaidMutation,
 } from "../../app/api.js";
 
 const errorMessage = (error) => error?.data?.message ?? "Unable to complete that review.";
@@ -15,16 +17,23 @@ function AdminOperations() {
   const { data: orders } = useGetAdminOrdersQuery();
   const { data: reviews } = useGetAdminReviewsQuery();
   const { data: audit } = useGetAdminAuditQuery();
+  const { data: riderData } = useGetAdminRidersQuery();
   const [updateUser] = useUpdateAdminUserMutation();
   const [moderate] = useModerateReviewMutation();
+  const [reviewRider] = useReviewRiderMutation();
+  const [reviewLead] = useReviewRestaurantLeadMutation();
+  const [markPaid] = useMarkRiderEarningPaidMutation();
 
   return <section className="admin-operations">
-    <div className="admin-operation-tabs">{["users", "orders", "reviews", "audit"].map((value) => <button className={tab === value ? "active" : ""} onClick={() => setTab(value)} key={value}>{value}</button>)}</div>
+    <div className="admin-operation-tabs">{["users", "riders", "restaurant leads", "payouts", "orders", "reviews", "audit"].map((value) => <button className={tab === value ? "active" : ""} onClick={() => setTab(value)} key={value}>{value}</button>)}</div>
     {tab === "users" && <div className="admin-table">{(users?.data.users ?? []).map((account) => <article key={account._id}>
       <div><b>{account.name}</b><span>{account.email} · {account.role}</span></div>
       {account.role !== "admin" && <button onClick={() => updateUser({ id: account._id, status: account.status === "active" ? "suspended" : "active" })}>{account.status === "active" ? "Suspend account" : "Reactivate account"}</button>}
     </article>)}</div>}
     {tab === "orders" && <div className="admin-table">{(orders?.data.orders ?? []).map((order) => <article key={order._id}><div><b>{order.orderNumber} · {order.restaurantSnapshot.name}</b><span>{order.customer?.email} · {order.status}</span></div><strong>₹{order.pricing.total.toFixed(2)}</strong></article>)}</div>}
+    {tab === "riders" && <div className="admin-table">{(riderData?.data.riders ?? []).map((rider) => <article key={rider._id}><div><b>{rider.user?.name} · {rider.vehicleType}</b><span>{rider.user?.email} · {rider.city} · {rider.status}</span></div><div>{rider.status !== "approved" && <button onClick={() => reviewRider({ id: rider._id, status: "approved", reason: "" })}>Approve</button>}{rider.status !== "rejected" && <button onClick={() => reviewRider({ id: rider._id, status: "rejected", reason: "Application did not meet rider verification requirements" })}>Reject</button>}</div></article>)}</div>}
+    {tab === "restaurant leads" && <div className="admin-table">{(riderData?.data.leads ?? []).map((lead) => <article key={lead._id}><div><b>{lead.restaurantName} · {lead.city}</b><span>{lead.ownerName} · referred by {lead.rider?.user?.name} · {lead.status}</span></div><div>{lead.status === "submitted" && <button onClick={() => reviewLead({ id: lead._id, status: "contacted", reason: "" })}>Mark contacted</button>}{["submitted","contacted"].includes(lead.status) && <button onClick={() => reviewLead({ id: lead._id, status: "approved", reason: "" })}>Approve lead</button>}</div></article>)}</div>}
+    {tab === "payouts" && <div className="admin-table">{(riderData?.data.earnings ?? []).map((earning) => <article key={earning._id}><div><b>{earning.rider?.user?.name} · ₹{earning.amount.toFixed(2)}</b><span>{earning.type.replaceAll("_", " ")} · {earning.restaurant?.name} · UPI {earning.rider?.upiId} · {earning.status}</span></div>{earning.status === "earned" && <button onClick={() => markPaid(earning._id)}>Mark paid</button>}</article>)}</div>}
     {tab === "reviews" && <div className="admin-table">{(reviews?.data.reviews ?? []).map((review) => <article key={review._id}><div><b>★ {review.rating} · {review.restaurant?.name}</b><span>{review.comment}</span></div><button onClick={() => moderate({ id: review._id, status: review.status === "visible" ? "hidden" : "visible" })}>{review.status === "visible" ? "Hide" : "Show"}</button></article>)}</div>}
     {tab === "audit" && <div className="admin-table">{(audit?.data.audits ?? []).map((entry) => <article key={entry._id}><div><b>{entry.action.replaceAll("_", " ")}</b><span>{entry.admin?.email} · {new Date(entry.createdAt).toLocaleString()}</span></div></article>)}</div>}
   </section>;

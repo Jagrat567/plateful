@@ -1,7 +1,8 @@
 import { Router } from "express";
 import { authenticate, authorize } from "../../middleware/authenticate.js";
 import { validate } from "../../middleware/validate.js";
-import { listAllOrders, listApplications, listAudit, listReviews, listUsers, moderateReview, operateRestaurant, reviewRestaurant, updateUserStatus } from "./admin.controller.js";
+import { listAllOrders, listApplications, listAudit, listReviews, listRiders, listUsers, markRiderEarningPaid, moderateReview, operateRestaurant, reviewRestaurant, reviewRestaurantLead, reviewRider, updateUserStatus } from "./admin.controller.js";
+import { earningPayoutSchema, leadDecisionSchema, riderDecisionSchema } from "../riders/rider.schemas.js";
 import { restaurantOperationSchema, reviewModerationSchema, reviewRestaurantSchema, userStatusSchema } from "./admin.schemas.js";
 
 export const adminRouter = Router();
@@ -15,3 +16,7 @@ adminRouter.get("/orders", listAllOrders);
 adminRouter.get("/reviews", listReviews);
 adminRouter.patch("/reviews/:reviewId", validate(reviewModerationSchema), moderateReview);
 adminRouter.get("/audit", listAudit);
+adminRouter.get("/riders", listRiders);
+adminRouter.patch("/riders/:riderId", validate(riderDecisionSchema), reviewRider);
+adminRouter.patch("/restaurant-leads/:leadId", validate(leadDecisionSchema), reviewRestaurantLead);
+adminRouter.patch("/rider-earnings/:earningId", validate(earningPayoutSchema), markRiderEarningPaid);

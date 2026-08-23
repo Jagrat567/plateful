@@ -63,7 +63,7 @@ export function DiscoveryPage() {
           <button className={foodType === "veg" ? "active" : ""} onClick={() => { setFoodType("veg"); setPage(1); }}>Vegetarian</button>
           <button className={foodType === "vegan" ? "active" : ""} onClick={() => { setFoodType("vegan"); setPage(1); }}>Vegan</button>
           <button className={openNow ? "active" : ""} onClick={() => { setOpenNow(!openNow); setPage(1); }}>Open now</button>
-          <select value={sort} onChange={(event) => setSort(event.target.value)}><option value="rating">Top rated</option><option value="deliveryTime">Fastest</option><option value="deliveryFee">Lowest fee</option><option value="newest">Newest</option></select>
+          <select value={sort} onChange={(event) => setSort(event.target.value)}><option value="rating">Top rated</option><option value="deliveryTime">Fastest</option><option value="newest">Newest</option></select>
         </div>
       </div>
       {isLoading && <div className="page-state">Searching available menus…</div>}
@@ -80,7 +80,7 @@ export function DiscoveryPage() {
         {search && <h2 className="restaurant-result-heading">Restaurants serving your search</h2>}
         <div className="public-restaurant-grid">{restaurants.map((restaurant) => <Link className="public-restaurant-card" to={`/restaurants/${restaurant._id}`} key={restaurant._id}>
           <div className="public-card-image">{restaurant.coverImageUrl ? <img src={restaurant.coverImageUrl} alt={restaurant.name}/> : <span>🍲</span>}<b>{restaurant.estimatedDeliveryMinutes} min</b>{user && user.role !== "admin" && <button className="favorite-button" onClick={(event) => { event.preventDefault(); toggleFavorite(restaurant._id); }}>{favoriteIds.has(restaurant._id) ? "♥" : "♡"}</button>}</div>
-          <div><div className="public-card-title"><h3>{restaurant.name}</h3><span>★ {restaurant.rating || "New"}</span></div><p>{restaurant.cuisines.join(" · ")}</p><small>{restaurant.address.area}, {restaurant.address.city} · ₹{restaurant.deliveryFee} delivery · {restaurant.isOpenNow ? "Open" : "Closed"}</small></div>
+          <div><div className="public-card-title"><h3>{restaurant.name}</h3><span>★ {restaurant.rating || "New"}</span></div><p>{restaurant.cuisines.join(" · ")}</p><small>{restaurant.address.area}, {restaurant.address.city} · First 1 km free · {restaurant.isOpenNow ? "Open" : "Closed"}</small></div>
         </Link>)}</div>
       </>}
       {pagination?.pages > 1 && <div className="pagination"><button disabled={page === 1} onClick={() => setPage(page - 1)}>Previous</button><span>Page {page} of {pagination.pages}</span><button disabled={page === pagination.pages} onClick={() => setPage(page + 1)}>Next</button></div>}

@@ -15,6 +15,7 @@ import { cartRouter } from "./modules/cart/cart.routes.js";
 import { orderRouter } from "./modules/orders/order.routes.js";
 import { reviewRouter } from "./modules/reviews/review.routes.js";
 import { favoriteRouter } from "./modules/restaurants/favorites.routes.js";
+import { riderRouter } from "./modules/riders/rider.routes.js";
 
 export const app = express();
 app.set("trust proxy", 1);
@@ -40,5 +41,6 @@ app.use("/api/v1/cart", cartRouter);
 app.use("/api/v1/orders", orderRouter);
 app.use("/api/v1/reviews", reviewRouter);
 app.use("/api/v1/favorites", favoriteRouter);
+app.use("/api/v1/riders", riderRouter);
 app.use(notFoundHandler);
 app.use(errorHandler);

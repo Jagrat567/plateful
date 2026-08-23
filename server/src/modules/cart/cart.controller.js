@@ -3,17 +3,18 @@ import { MenuItem } from "../menu/menuItem.model.js";
 import { Restaurant } from "../restaurants/restaurant.model.js";
 import { Order } from "../orders/order.model.js";
 import { AppError } from "../../utils/AppError.js";
+import { PLATFORM_FEE } from "../../config/businessRules.js";
 
 async function cartResponse(userId) {
   const cart = await Cart.findOne({ user: userId }).populate("restaurant", "name deliveryFee minimumOrder estimatedDeliveryMinutes isAcceptingOrders status").populate("items.menuItem", "name description price imageUrl foodType isAvailable restaurant");
-  if (!cart) return { cart: null, subtotal: 0, discount: 0, couponCode: "", deliveryFee: 0, total: 0, itemCount: 0 };
+  if (!cart) return { cart: null, subtotal: 0, discount: 0, couponCode: "", deliveryFee: 0, platformFee: PLATFORM_FEE, total: 0, itemCount: 0 };
   const validItems = cart.items.filter((entry) => entry.menuItem);
   const subtotal = validItems.reduce((sum, entry) => sum + entry.menuItem.price * entry.quantity, 0);
   const itemCount = validItems.reduce((sum, entry) => sum + entry.quantity, 0);
-  const deliveryFee = cart.restaurant?.deliveryFee ?? 0;
+  const deliveryFee = 0;
   const previousOrder = await Order.exists({ customer: userId, status: { $ne: "cancelled" } });
   const discount = previousOrder ? 0 : Number((subtotal * 0.5).toFixed(2));
-  return { cart, subtotal, discount, couponCode: discount ? "FIRST50" : "", deliveryFee, total: subtotal - discount + deliveryFee, itemCount };
+  return { cart, subtotal, discount, couponCode: discount ? "FIRST50" : "", deliveryFee, platformFee: PLATFORM_FEE, total: subtotal - discount + PLATFORM_FEE, itemCount };
 }
 
 export async function getCart(req, res) { res.json({ success: true, data: await cartResponse(req.user.id) }); }

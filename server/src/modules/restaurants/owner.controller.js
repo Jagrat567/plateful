@@ -3,6 +3,8 @@ import { MenuCategory } from "../menu/menuCategory.model.js";
 import { MenuItem } from "../menu/menuItem.model.js";
 import { AppError } from "../../utils/AppError.js";
 import { deleteImage } from "../../config/cloudinary.js";
+import { RestaurantLead } from "../riders/restaurantLead.model.js";
+import { RiderProfile } from "../riders/riderProfile.model.js";
 
 async function ownerRestaurant(userId) {
   const restaurant = await Restaurant.findOne({ owner: userId });
@@ -12,7 +14,13 @@ async function ownerRestaurant(userId) {
 
 export async function createRestaurant(req, res) {
   if (await Restaurant.exists({ owner: req.user.id })) throw new AppError(409, "You already have a restaurant application");
-  const restaurant = await Restaurant.create({ ...req.validated.body, isAcceptingOrders: false, owner: req.user.id });
+  if (await RiderProfile.exists({ user: req.user.id })) throw new AppError(409, "Rider accounts cannot also own a restaurant");
+  const lead = await RestaurantLead.findOne({ status: "approved", $or: [{ ownerEmail: req.user.email }, { ownerPhone: req.validated.body.contactPhone }] }).sort({ createdAt: 1 });
+  const restaurant = await Restaurant.create({ ...req.validated.body, isAcceptingOrders: false, owner: req.user.id, referredByRider: lead?.rider ?? null, referralLead: lead?.id ?? null });
+  if (lead) {
+    lead.status = "converted"; lead.convertedRestaurant = restaurant.id; await lead.save();
+    await RiderProfile.updateOne({ _id: lead.rider }, { $inc: { referredRestaurants: 1 } });
+  }
   if (req.user.role === "customer") {
     req.user.role = "restaurantOwner";
     await req.user.save({ validateModifiedOnly: true });

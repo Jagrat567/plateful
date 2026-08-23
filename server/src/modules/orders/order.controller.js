@@ -8,6 +8,7 @@ import { emitToUser } from "../../socket.js";
 import { Restaurant } from "../restaurants/restaurant.model.js";
 import { MenuItem } from "../menu/menuItem.model.js";
 import { orderEmail } from "../../services/email.service.js";
+import { deliveryPricing, PLATFORM_FEE, RESTAURANT_COMMISSION_RATE, RIDER_REFERRAL_SHARE } from "../../config/businessRules.js";
 
 const orderNumber = () => `PLT-${Date.now().toString(36).toUpperCase()}-${randomBytes(2).toString("hex").toUpperCase()}`;
 
@@ -27,12 +28,18 @@ export async function checkout(req, res) {
   const items = cart.items.map((entry) => ({ menuItem: entry.menuItem.id, name: entry.menuItem.name, description: entry.menuItem.description, imageUrl: entry.menuItem.imageUrl, foodType: entry.menuItem.foodType, unitPrice: entry.menuItem.price, quantity: entry.quantity, lineTotal: entry.menuItem.price * entry.quantity }));
   const subtotal = items.reduce((sum, item) => sum + item.lineTotal, 0);
   if (subtotal < cart.restaurant.minimumOrder) throw new AppError(409, `Minimum order is ₹${cart.restaurant.minimumOrder}`);
-  const deliveryFee = cart.restaurant.deliveryFee;
+  const distance = deliveryPricing(req.validated.body.deliveryDistanceKm);
+  const deliveryFee = distance.deliveryFee;
   const discount = previousOrder ? 0 : Number((subtotal * 0.5).toFixed(2));
   const couponCode = discount ? "FIRST50" : "";
   const now = new Date();
   const simulate = env.ORDER_SIMULATION_ENABLED && cart.restaurant.orderMode !== "manual";
-  const order = await Order.create({ orderNumber: orderNumber(), idempotencyKey: req.validated.body.idempotencyKey, customer: req.user.id, restaurant: cart.restaurant.id, restaurantSnapshot: { name: cart.restaurant.name, contactPhone: cart.restaurant.contactPhone }, items, deliveryAddress: { label: address.label, recipientName: address.recipientName, phone: address.phone, line1: address.line1, area: address.area, city: address.city, state: address.state, postalCode: address.postalCode, instructions: address.instructions }, pricing: { subtotal, discount, couponCode, deliveryFee, total: subtotal - discount + deliveryFee }, status: "placed", statusHistory: [{ status: "placed", changedAt: now }], paymentMethod: "cash_on_delivery", paymentStatus: "pending", simulationEnabled: simulate, nextStatusUpdateAt: simulate ? new Date(now.getTime() + env.ORDER_STATUS_INTERVAL_MS) : null });
+  const restaurantCounter = await Restaurant.findByIdAndUpdate(cart.restaurant.id, { $inc: { totalOrdersReceived: 1 } }, { new: true });
+  const restaurantOrderNumber = restaurantCounter.totalOrdersReceived;
+  const commissionApplied = restaurantOrderNumber % 2 === 0;
+  const restaurantCommissionAmount = commissionApplied ? Number((subtotal * RESTAURANT_COMMISSION_RATE).toFixed(2)) : 0;
+  const riderReferralEarning = cart.restaurant.referredByRider ? Number((restaurantCommissionAmount * RIDER_REFERRAL_SHARE).toFixed(2)) : 0;
+  const order = await Order.create({ orderNumber: orderNumber(), idempotencyKey: req.validated.body.idempotencyKey, customer: req.user.id, restaurant: cart.restaurant.id, restaurantSnapshot: { name: cart.restaurant.name, contactPhone: cart.restaurant.contactPhone }, items, deliveryAddress: { label: address.label, recipientName: address.recipientName, phone: address.phone, line1: address.line1, area: address.area, city: address.city, state: address.state, postalCode: address.postalCode, instructions: address.instructions }, pricing: { subtotal, discount, couponCode, deliveryFee, platformFee: PLATFORM_FEE, total: subtotal - discount + deliveryFee + PLATFORM_FEE }, deliveryDistanceKm: distance.distanceKm, chargeableDeliveryKm: distance.chargeableKm, restaurantOrderNumber, financials: { restaurantCommissionApplied: commissionApplied, restaurantCommissionRate: commissionApplied ? RESTAURANT_COMMISSION_RATE : 0, restaurantCommissionAmount, riderReferralShareRate: cart.restaurant.referredByRider ? RIDER_REFERRAL_SHARE : 0, riderReferralEarning, riderDeliveryEarning: deliveryFee }, status: "placed", statusHistory: [{ status: "placed", changedAt: now }], paymentMethod: "cash_on_delivery", paymentStatus: "pending", simulationEnabled: simulate, nextStatusUpdateAt: simulate ? new Date(now.getTime() + env.ORDER_STATUS_INTERVAL_MS) : null });
   await cart.deleteOne();
   emitToUser(req.user.id, "order:created", order);
   emitToUser(cart.restaurant.owner, "restaurant:order_created", order);

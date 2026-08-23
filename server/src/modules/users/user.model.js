@@ -6,7 +6,7 @@ const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true, lowercase: true, trim: true },
   phone: { type: String, required: true, unique: true, trim: true },
   passwordHash: { type: String, required: true, select: false },
-  role: { type: String, enum: ["customer", "restaurantOwner", "admin"], default: "customer" },
+  role: { type: String, enum: ["customer", "restaurantOwner", "rider", "admin"], default: "customer" },
   status: { type: String, enum: ["active", "suspended"], default: "active" },
   refreshTokenHash: { type: String, select: false, default: null },
   favoriteRestaurants: [{ type: mongoose.Schema.Types.ObjectId, ref: "Restaurant" }],

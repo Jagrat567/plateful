@@ -5,6 +5,7 @@ import { applyOrderStatus, nextOrderStatus } from "./orderStatus.js";
 import { emitToUser } from "../../socket.js";
 import { User } from "../users/user.model.js";
 import { orderEmail } from "../../services/email.service.js";
+import { settleDeliveredOrder } from "./orderFinancials.js";
 
 async function restaurantFor(userId) {
   const restaurant = await Restaurant.findOne({ owner: userId });
@@ -31,6 +32,7 @@ export async function updateRestaurantOrder(req, res) {
     applyOrderStatus(order, status); order.simulationEnabled = false; order.nextStatusUpdateAt = null;
   }
   await order.save();
+  if (order.status === "delivered") await settleDeliveredOrder(order);
   emitToUser(order.customer, "order:updated", order);
   if (order.status === "delivered") { const customer = await User.findById(order.customer); if (customer) orderEmail(customer, order, "Order delivered").catch((error) => console.error("Delivery email failed", error)); }
   res.json({ success: true, data: { order } });

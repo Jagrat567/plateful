@@ -5,7 +5,7 @@ import { cancelOrder, checkout, getOrder, listOrders, reorder } from "./order.co
 import { cancelOrderSchema, checkoutSchema, orderParamsSchema, reorderSchema } from "./order.schemas.js";
 
 export const orderRouter = Router();
-orderRouter.use(authenticate, authorize("customer", "restaurantOwner"));
+orderRouter.use(authenticate, authorize("customer", "restaurantOwner", "rider"));
 orderRouter.post("/checkout", validate(checkoutSchema), checkout);
 orderRouter.get("/", listOrders);
 orderRouter.get("/:orderId", validate(orderParamsSchema), getOrder);

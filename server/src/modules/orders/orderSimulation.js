@@ -4,6 +4,7 @@ import { Order } from "./order.model.js";
 import { applyOrderStatus, nextOrderStatus } from "./orderStatus.js";
 import { User } from "../users/user.model.js";
 import { orderEmail } from "../../services/email.service.js";
+import { settleDeliveredOrder } from "./orderFinancials.js";
 
 let timer;
 let processing = false;
@@ -30,6 +31,7 @@ async function processDueOrders() {
         }
       }
       await order.save();
+      if (order.status === "delivered") await settleDeliveredOrder(order);
       emitToUser(order.customer, "order:updated", order);
       if (order.status === "delivered") {
         const customer = await User.findById(order.customer);

@@ -5,7 +5,7 @@ import { addCartItem, clearCart, getCart, removeCartItem, updateCartItem } from 
 import { addCartItemSchema, cartItemParamsSchema, updateCartItemSchema } from "./cart.schemas.js";
 
 export const cartRouter = Router();
-cartRouter.use(authenticate, authorize("customer", "restaurantOwner"));
+cartRouter.use(authenticate, authorize("customer", "restaurantOwner", "rider"));
 cartRouter.get("/", getCart);
 cartRouter.post("/items", validate(addCartItemSchema), addCartItem);
 cartRouter.patch("/items/:cartItemId", validate(updateCartItemSchema), updateCartItem);

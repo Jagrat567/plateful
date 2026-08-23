@@ -4,5 +4,5 @@ import { validate } from "../../middleware/validate.js";
 import { createReview } from "./review.controller.js";
 import { createReviewSchema } from "./review.schemas.js";
 export const reviewRouter = Router();
-reviewRouter.use(authenticate, authorize("customer", "restaurantOwner"));
+reviewRouter.use(authenticate, authorize("customer", "restaurantOwner", "rider"));
 reviewRouter.post("/", validate(createReviewSchema), createReview);

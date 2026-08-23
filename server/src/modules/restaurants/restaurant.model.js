@@ -2,6 +2,8 @@ import mongoose from "mongoose";
 
 const restaurantSchema = new mongoose.Schema({
   owner: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true, unique: true, index: true },
+  referredByRider: { type: mongoose.Schema.Types.ObjectId, ref: "RiderProfile", default: null, index: true },
+  referralLead: { type: mongoose.Schema.Types.ObjectId, ref: "RestaurantLead", default: null },
   name: { type: String, required: true, trim: true, maxlength: 100 },
   description: { type: String, required: true, trim: true, maxlength: 500 },
   cuisines: [{ type: String, trim: true, maxlength: 40 }],
@@ -28,6 +30,9 @@ const restaurantSchema = new mongoose.Schema({
   rating: { type: Number, default: 0, min: 0, max: 5 },
   ratingCount: { type: Number, default: 0, min: 0 },
   orderMode: { type: String, enum: ["simulated", "manual"], default: "simulated" },
+  totalOrdersReceived: { type: Number, default: 0, min: 0 },
+  totalCommissionCharged: { type: Number, default: 0, min: 0 },
+  commissionBalance: { type: Number, default: 0, min: 0 },
 }, { timestamps: true });
 
 export const Restaurant = mongoose.model("Restaurant", restaurantSchema);

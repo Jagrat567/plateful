@@ -5,7 +5,7 @@ import { createAddress, deleteAddress, listAddresses, updateAddress } from "./ad
 import { addressParamsSchema, createAddressSchema, updateAddressSchema } from "./address.schemas.js";
 
 export const addressRouter = Router();
-addressRouter.use(authenticate, authorize("customer", "restaurantOwner"));
+addressRouter.use(authenticate, authorize("customer", "restaurantOwner", "rider"));
 addressRouter.get("/", listAddresses);
 addressRouter.post("/", validate(createAddressSchema), createAddress);
 addressRouter.patch("/:addressId", validate(updateAddressSchema), updateAddress);

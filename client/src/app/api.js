@@ -28,7 +28,7 @@ const baseQueryWithRefresh = async (args, api, extraOptions) => {
 export const api = createApi({
   reducerPath: "api",
   baseQuery: baseQueryWithRefresh,
-  tagTypes: ["Session", "Restaurant", "Menu", "Applications", "Addresses", "Cart", "PublicRestaurants", "Orders", "Reviews", "Favorites", "Admin"],
+  tagTypes: ["Session", "Restaurant", "Menu", "Applications", "Addresses", "Cart", "PublicRestaurants", "Orders", "Reviews", "Favorites", "Admin", "Rider"],
   endpoints: (builder) => ({
     register: builder.mutation({ query: (body) => ({ url: "/auth/register", method: "POST", body }) }),
     login: builder.mutation({ query: (body) => ({ url: "/auth/login", method: "POST", body }) }),
@@ -79,7 +79,17 @@ export const api = createApi({
     getAdminAudit: builder.query({ query: () => "/admin/audit", providesTags: ["Admin"] }),
     forgotPassword: builder.mutation({ query: (body) => ({ url: "/auth/forgot-password", method: "POST", body }) }),
     resetPassword: builder.mutation({ query: (body) => ({ url: "/auth/reset-password", method: "POST", body }) }),
+    getRiderDashboard: builder.query({ query: () => "/riders/dashboard", providesTags: ["Rider"] }),
+    applyAsRider: builder.mutation({ query: (body) => ({ url: "/riders/apply", method: "POST", body }), invalidatesTags: ["Rider"] }),
+    updateRiderAvailability: builder.mutation({ query: (body) => ({ url: "/riders/availability", method: "PATCH", body }), invalidatesTags: ["Rider"] }),
+    submitRestaurantLead: builder.mutation({ query: (body) => ({ url: "/riders/restaurant-leads", method: "POST", body }), invalidatesTags: ["Rider"] }),
+    acceptDelivery: builder.mutation({ query: (id) => ({ url: `/riders/deliveries/${id}/accept`, method: "POST" }), invalidatesTags: ["Rider", "Orders"] }),
+    updateRiderDelivery: builder.mutation({ query: ({ id, status }) => ({ url: `/riders/deliveries/${id}/status`, method: "PATCH", body: { status } }), invalidatesTags: ["Rider", "Orders"] }),
+    getAdminRiders: builder.query({ query: () => "/admin/riders", providesTags: ["Rider"] }),
+    reviewRider: builder.mutation({ query: ({ id, ...body }) => ({ url: `/admin/riders/${id}`, method: "PATCH", body }), invalidatesTags: ["Rider", "Admin"] }),
+    reviewRestaurantLead: builder.mutation({ query: ({ id, ...body }) => ({ url: `/admin/restaurant-leads/${id}`, method: "PATCH", body }), invalidatesTags: ["Rider", "Admin"] }),
+    markRiderEarningPaid: builder.mutation({ query: (id) => ({ url: `/admin/rider-earnings/${id}`, method: "PATCH", body: { status: "paid" } }), invalidatesTags: ["Rider", "Admin"] }),
   }),
 });
 
-export const { useRegisterMutation, useLoginMutation, useRefreshMutation, useLogoutMutation, useGetMeQuery, useCreateRestaurantMutation, useGetOwnerRestaurantQuery, useUpdateRestaurantMutation, useGetOwnerMenuQuery, useCreateCategoryMutation, useDeleteCategoryMutation, useCreateMenuItemMutation, useUpdateMenuItemMutation, useDeleteMenuItemMutation, useUploadImageMutation, useGetApplicationsQuery, useReviewRestaurantMutation, useGetRestaurantsQuery, useGetRestaurantQuery, useGetAddressesQuery, useCreateAddressMutation, useUpdateAddressMutation, useDeleteAddressMutation, useGetCartQuery, useAddCartItemMutation, useUpdateCartItemMutation, useRemoveCartItemMutation, useClearCartMutation, useCheckoutMutation, useGetOrdersQuery, useGetOrderQuery, useCancelOrderMutation, useReorderMutation, useGetOwnerOrdersQuery, useUpdateOwnerOrderMutation, useCreateReviewMutation, useGetRestaurantReviewsQuery, useGetFavoritesQuery, useGetRecentRestaurantsQuery, useToggleFavoriteMutation, useGetAdminUsersQuery, useUpdateAdminUserMutation, useGetAdminOrdersQuery, useGetAdminReviewsQuery, useModerateReviewMutation, useOperateRestaurantMutation, useGetAdminAuditQuery, useForgotPasswordMutation, useResetPasswordMutation } = api;
+export const { useRegisterMutation, useLoginMutation, useRefreshMutation, useLogoutMutation, useGetMeQuery, useCreateRestaurantMutation, useGetOwnerRestaurantQuery, useUpdateRestaurantMutation, useGetOwnerMenuQuery, useCreateCategoryMutation, useDeleteCategoryMutation, useCreateMenuItemMutation, useUpdateMenuItemMutation, useDeleteMenuItemMutation, useUploadImageMutation, useGetApplicationsQuery, useReviewRestaurantMutation, useGetRestaurantsQuery, useGetRestaurantQuery, useGetAddressesQuery, useCreateAddressMutation, useUpdateAddressMutation, useDeleteAddressMutation, useGetCartQuery, useAddCartItemMutation, useUpdateCartItemMutation, useRemoveCartItemMutation, useClearCartMutation, useCheckoutMutation, useGetOrdersQuery, useGetOrderQuery, useCancelOrderMutation, useReorderMutation, useGetOwnerOrdersQuery, useUpdateOwnerOrderMutation, useCreateReviewMutation, useGetRestaurantReviewsQuery, useGetFavoritesQuery, useGetRecentRestaurantsQuery, useToggleFavoriteMutation, useGetAdminUsersQuery, useUpdateAdminUserMutation, useGetAdminOrdersQuery, useGetAdminReviewsQuery, useModerateReviewMutation, useOperateRestaurantMutation, useGetAdminAuditQuery, useForgotPasswordMutation, useResetPasswordMutation, useGetRiderDashboardQuery, useApplyAsRiderMutation, useUpdateRiderAvailabilityMutation, useSubmitRestaurantLeadMutation, useAcceptDeliveryMutation, useUpdateRiderDeliveryMutation, useGetAdminRidersQuery, useReviewRiderMutation, useReviewRestaurantLeadMutation, useMarkRiderEarningPaidMutation } = api;

@@ -1,6 +1,19 @@
 # Plateful
 
-Plateful is a production-ready MERN food-delivery marketplace with customer, restaurant-owner, and administrator experiences. It includes menu discovery, dish search, cart and checkout, first-order discounts, Socket.IO order tracking, restaurant operations, reviews, favorites, image uploads, and seeded marketplace data.
+Plateful is a production-ready MERN food-delivery marketplace with customer, restaurant-owner, rider, and administrator experiences. It includes menu discovery, dish search, cart and checkout, first-order discounts, Socket.IO order tracking, rider deliveries, restaurant referrals, commission accounting, restaurant operations, reviews, favorites, image uploads, and seeded marketplace data.
+
+## Rider and marketplace model
+
+- Customers pay a ₹5 platform fee at checkout.
+- The first delivery kilometre is free; each additional started kilometre costs ₹10.
+- Every second order received is marked for a 10% restaurant commission, collected only after that order is delivered.
+- A rider who referred that restaurant earns 20% of Plateful's restaurant commission.
+- An assigned delivery rider earns the customer delivery fee for that order.
+- Riders apply from `/rider`, require administrator approval, can go online, accept ready-for-pickup deliveries, submit consented restaurant leads, and track delivery and referral earnings.
+
+These defaults are centralized in `server/src/config/businessRules.js`.
+
+Restaurant commission and rider earnings are stored in auditable ledgers. Administrators can mark rider earnings as paid; automated bank/UPI transfers and restaurant commission collection require a payment provider integration. Checkout currently uses the customer's estimated restaurant distance, so production distance enforcement should be connected to a trusted maps/geocoding provider.
 
 ## Architecture
 
