@@ -4,9 +4,12 @@ import { connectDatabase, disconnectDatabase } from "./config/database.js";
 import { env } from "./config/env.js";
 import { createSocketServer } from "./socket.js";
 import { startOrderSimulation, stopOrderSimulation } from "./modules/orders/orderSimulation.js";
+import dns from "node:dns";
 
 const httpServer = createServer(app);
 createSocketServer(httpServer);
+
+dns.setServers(["1.1.1.1", "8.8.8.8"]);
 
 async function start() {
   await connectDatabase();
